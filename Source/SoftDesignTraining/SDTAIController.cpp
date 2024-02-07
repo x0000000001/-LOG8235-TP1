@@ -63,7 +63,7 @@ TArray<FOverlapResult> ASDTAIController::CollectTargetActorsInFrontOfCharacter(F
 	auto pawn = GetPawn();
 	PhysicsHelpers physicsHelpers(GetWorld());
 
-	physicsHelpers.SphereOverlap(pawn->GetActorLocation() + pos * 750.f, 1000.f, results, true);
+	physicsHelpers.SphereOverlap(pawn->GetActorLocation() + pos * 750.f, 1000.f, results, false);
 
 	return results;
 }
@@ -80,7 +80,7 @@ void ASDTAIController::CheckTarget()
 		TArray<FHitResult> hits;
 		FVector start = pawn->GetActorLocation();
 		FVector end = this->currentTarget->GetActorLocation();
-		physicsHelpers.CastRay(start, end, hits, true);
+		physicsHelpers.CastRay(start, end, hits, false);
 
 		auto direction = (this->currentTarget->GetActorLocation() - pawn->GetActorLocation());
 		this->m_currentDirection = direction.GetSafeNormal();
@@ -125,7 +125,7 @@ void ASDTAIController::CheckTarget()
 			TArray<FHitResult> hit;
 			FVector start = pawn->GetActorLocation();
 			FVector end = start + (collectible->GetActorLocation() - pawn->GetActorLocation()).GetSafeNormal() * 1000.f;
-			physicsHelpers.CastRay(pawn->GetActorLocation(), collectible->GetActorLocation(), hit, true);
+			physicsHelpers.CastRay(pawn->GetActorLocation(), collectible->GetActorLocation(), hit, false);
 
 			// Si le raycast ne touche pas d'obstacle, on prend le collectible comme cible
 			if (hit.Num() == 0)
@@ -160,7 +160,7 @@ bool ASDTAIController::CheckPlayer()
 		TArray<struct FHitResult> hit;
 		FVector start = pawn->GetActorLocation();
 		FVector end = start + (player->GetActorLocation() - pawn->GetActorLocation()).GetSafeNormal() * 1000.f;
-		physicsHelpers.CastRay(pawn->GetActorLocation(), player->GetActorLocation(), hit, true);
+		physicsHelpers.CastRay(pawn->GetActorLocation(), player->GetActorLocation(), hit, false);
 
 		if (hit.Num() == 0)
 		{
@@ -182,12 +182,12 @@ void ASDTAIController::Tick(float deltaTime)
 
 	FVector start = pawn->GetActorLocation();
 	FVector end = start + pawn->GetActorForwardVector() * this->m_avoidRange;
-	physicsHelpers.CastRay(start, end, this->m_frontHitResult, true);
+	physicsHelpers.CastRay(start, end, this->m_frontHitResult, false);
 
 	// faire un cone d'overlap pour d�tecter les obstacles devant le joueur
 	// si un obstacle est d�tect�, on appelle la fonction AvoidObstacle
 	// physicsHelpers.SphereOverlap(start, this->m_avoidRange, this->m_OverlapResult, true);
-	physicsHelpers.SphereCast(start + FVector(0.f, 0.f, -100.f), end + FVector(0.f, 0.f, -100.f), this->m_avoidRange, this->m_sweepResults, true);
+	physicsHelpers.SphereCast(start + FVector(0.f, 0.f, -100.f), end + FVector(0.f, 0.f, -100.f), this->m_avoidRange, this->m_sweepResults, false);
 	this->m_sweepResults = PhysicsHelpers::FilterHitResultsByTraceChannel(this->m_sweepResults, ECC_GameTraceChannel3);
 	if (m_frontHitResult.Num() > 0)
 	{
