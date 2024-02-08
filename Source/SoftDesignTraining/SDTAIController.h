@@ -31,9 +31,10 @@ private:
     TArray<struct FHitResult> m_frontHitResult;
     TArray<struct FHitResult> m_leftHitResult;
     TArray<struct FHitResult> m_rightHitResult;
+    TArray<struct FHitResult> m_sweepResults;
     FVector m_currentDirection = FVector(1.f, 1.f, 0.f);
     void Movement(float deltaTime, FVector direction);
-    void AvoidObstacle();
+    void AvoidObstacle(const TArray<FHitResult>& hitResults);
 
     TArray<FOverlapResult> CollectTargetActorsInFrontOfCharacter(FVector pos);
     void CheckTarget();
