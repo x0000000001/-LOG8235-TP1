@@ -2,6 +2,7 @@
 
 #include "SDTCollectible.h"
 #include "SoftDesignTraining.h"
+#include "Kismet/GameplayStatics.h"
 
 ASDTCollectible::ASDTCollectible()
 {
@@ -15,6 +16,19 @@ void ASDTCollectible::BeginPlay()
 
 void ASDTCollectible::Collect()
 {
+    if (!IsOnCooldown())
+    {
+        if (CollectibleEffectType == ECollectibleEffectType::SoundEffect)
+        {
+            UGameplayStatics::SpawnSoundAtLocation(this, SoundEffect, GetActorLocation());
+        }
+        else if (CollectibleEffectType == ECollectibleEffectType::VisualEffect)
+        {
+            particleComponent = UGameplayStatics::SpawnEmitterAtLocation(this, CollectibleFX, GetActorLocation());
+        }
+
+    }
+
     GetWorld()->GetTimerManager().SetTimer(m_CollectCooldownTimer, this, &ASDTCollectible::OnCooldownDone, m_CollectCooldownDuration, false);
 
     GetStaticMeshComponent()->SetVisibility(false);
@@ -22,8 +36,12 @@ void ASDTCollectible::Collect()
 
 void ASDTCollectible::OnCooldownDone()
 {
-    GetWorld()->GetTimerManager().ClearTimer(m_CollectCooldownTimer);
+    if (particleComponent)
+    {
+        particleComponent->Deactivate();
+    }
 
+    GetWorld()->GetTimerManager().ClearTimer(m_CollectCooldownTimer);
     GetStaticMeshComponent()->SetVisibility(true);
 }
 

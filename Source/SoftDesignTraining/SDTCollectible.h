@@ -6,13 +6,20 @@
 #include "Engine/StaticMeshActor.h"
 #include "SDTCollectible.generated.h"
 
+UENUM(BlueprintType)
+enum class ECollectibleEffectType : uint8
+{
+    SoundEffect UMETA(DisplayName = "Sound Effect"),
+    VisualEffect UMETA(DisplayName = "Visual Effect"),
+};
+
 /**
- * 
+ *
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API ASDTCollectible : public AStaticMeshActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 public:
     ASDTCollectible();
 
@@ -24,14 +31,24 @@ public:
     float m_CollectCooldownDuration = 10.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-        bool isMoveable = false;
+    bool isMoveable = false;
 
     virtual void Tick(float deltaTime) override;
     virtual void BeginPlay() override;
 
     FVector initialPosition;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    ECollectibleEffectType CollectibleEffectType;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AI)
+    class USoundBase* SoundEffect;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = AI)
+    class UParticleSystem* CollectibleFX;
+
+    UParticleSystemComponent* particleComponent;
+
 protected:
     FTimerHandle m_CollectCooldownTimer;
-	
 };
