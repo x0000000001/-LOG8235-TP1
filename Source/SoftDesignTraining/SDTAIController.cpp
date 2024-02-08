@@ -36,7 +36,7 @@ void ASDTAIController::Movement(float deltaTime, FVector direction)
 void ASDTAIController::AvoidObstacle(const TArray<FHitResult>& hitResults)
 {
 	auto pawn = GetPawn();
-	for (auto &hit : this->m_frontHitResult)
+	for (auto &hit : hitResults)
 	{
 		if (hit.GetActor() != pawn)
 		{
