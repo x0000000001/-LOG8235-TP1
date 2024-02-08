@@ -3,59 +3,6 @@
 #include "SDTAIController.h"
 #include "SoftDesignTraining.h"
 #include "PhysicsHelpers.h"
-
-void ASDTAIController::Movement(float deltaTime, FVector direction)
-{
-	this->m_currentSpeed += this->m_acceleration * deltaTime;
-	this->m_currentSpeed = FMath::Clamp(this->m_currentSpeed, 0.f, this->m_maxSpeed);
-
-	if (this->m_frontObstacleDistance > 0.f)
-	{
-		float ratio = this->m_frontObstacleDistance / this->m_avoidRange;
-		this->m_currentSpeed = FMath::Min(FMath::Lerp(0, this->m_maxSpeed, ratio), this->m_currentSpeed);
-	}
-
-	auto p = GetPawn();
-	direction.Normalize();
-	p->AddMovementInput(direction, this->m_currentSpeed);
-
-	// faire un angle entre le vecteur direction et le vecteur de mouvement
-	auto angle = FMath::Acos(FVector::DotProduct(p->GetActorForwardVector(), direction));
-	// si l'angle est sup�rieur � 0.1, on tourne
-	if (angle > 0.1)
-	{
-		// on r�cup�re le signe de la rotation
-		auto sign = FMath::Sign(FVector::CrossProduct(p->GetActorForwardVector(), direction).Z);
-		// on tourne
-		p->AddActorLocalRotation(FRotator(0.f, sign * m_rotation, 0.f));
-	}
-}
-void ASDTAIController::AvoidObstacle(const TArray<FHitResult> &hitResults)
-{
-
-	auto pawn = GetPawn();
-	for (auto &hit : hitResults)
-	{
-		// if (GEngine)
-		//	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, hit.GetActor()->GetActorNameOrLabel());
-		if (hit.GetActor() != pawn)
-		{
-			FVector normal = hit.ImpactNormal;
-			if (m_avoidSide == -1)
-			{
-				m_avoidSide = FMath::RandRange(0, 1);
-			}
-
-			this->m_currentDirection = FVector::CrossProduct(normal, pawn->GetActorUpVector());
-			this->m_currentDirection = m_avoidSide == 0 ? this->m_currentDirection : -this->m_currentDirection;
-
-			this->m_currentDirection.Normalize();
-			break;
-		}
-	}
-}
-
-#include "PhysicsHelpers.h"
 #include "SDTCollectible.h"
 #include "SoftDesignTrainingMainCharacter.h"
 
@@ -86,9 +33,8 @@ void ASDTAIController::Movement(float deltaTime, FVector direction)
 	}
 }
 
-void ASDTAIController::AvoidObstacle()
+void ASDTAIController::AvoidObstacle(const TArray<FHitResult>& hitResults)
 {
-
 	auto pawn = GetPawn();
 	for (auto &hit : this->m_frontHitResult)
 	{
@@ -254,6 +200,11 @@ void ASDTAIController::Tick(float deltaTime)
 	else
 	{
 		m_avoidSide = -1;
+	}
+
+	if (!this->CheckPlayer())
+	{
+		this->CheckTarget();
 	}
 
 	this->Movement(deltaTime, this->m_currentDirection);

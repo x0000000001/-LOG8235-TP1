@@ -22,9 +22,6 @@ public:
     bool SphereOverlap(const FVector& pos, float radius, TArray<struct FOverlapResult>& outOverlaps, bool drawdebug);
     static TArray<FHitResult> FilterHitResultsByTraceChannel(const TArray<FHitResult>& InHitResults, const ECollisionChannel filteredChannel);
 
-
-
-
 protected:
 
     void DebugDrawHitPoint(const FHitResult& hit);
