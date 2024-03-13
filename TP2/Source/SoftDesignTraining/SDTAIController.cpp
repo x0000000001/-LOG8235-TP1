@@ -10,6 +10,7 @@
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
 #include "EngineUtils.h"
+#include "NavigationSystem.h"
 
 ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer.SetDefaultSubobjectClass<USDTPathFollowingComponent>(TEXT("PathFollowingComponent")))
@@ -18,9 +19,50 @@ ASDTAIController::ASDTAIController(const FObjectInitializer& ObjectInitializer)
 
 void ASDTAIController::GoToBestTarget(float deltaTime)
 {
-    // Move to target depending on current behavior
-    // This function is called while m_ReachedTarget is true.
-    // Check void ASDTBaseAIController::Tick for how it works.
+    if (m_ReachedTarget)
+    {
+        UWorld* world = GetWorld();
+        TArray<AActor*> collectibles;
+
+        if (world) {
+            UGameplayStatics::GetAllActorsOfClass(world, ASDTCollectible::StaticClass(), collectibles);
+        }
+
+        if (collectibles.Num() > 0)
+        {
+            float minDistance = TNumericLimits<float>::Max();
+            ASDTCollectible* closestCollectible = nullptr;
+            for (AActor* collectibleActor : collectibles)
+            {
+                ASDTCollectible* collectible = Cast<ASDTCollectible>(collectibleActor);
+                if (collectible && !collectible->IsOnCooldown())
+                {
+                    float distance = TNumericLimits<float>::Max();
+                    UNavigationPath* path = UNavigationSystemV1::FindPathToActorSynchronously(this, GetPawn()->GetActorLocation(), collectible);
+                    if (path && path->GetPath().IsValid() && !path->GetPath()->IsPartial() && path->GetPath()->GetPathPoints().Num() != 0)
+                    {
+                        distance = path->GetPathLength();
+                        GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, FString::Printf(TEXT("Distance to closest collectible: %f"), distance));
+                    }
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        closestCollectible = collectible;
+                    }
+                }
+            }
+            if (closestCollectible == nullptr) {
+                GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, TEXT("NO COLLECTIBLE REACHABLE"));
+            }
+
+            // Afficher le chemin de navigation
+            else if (closestCollectible)
+            {
+                m_ReachedTarget = false;
+                MoveToLocation(closestCollectible->GetActorLocation(), 5.f);
+            }
+        }
+    }
 }
 
 void ASDTAIController::OnMoveToTarget()
@@ -30,6 +72,7 @@ void ASDTAIController::OnMoveToTarget()
 
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
+    
     Super::OnMoveCompleted(RequestID, Result);
 
     m_ReachedTarget = true;
@@ -41,6 +84,12 @@ void ASDTAIController::ShowNavigationPath()
     // Use the UPathFollowingComponent of the AIController to get the path
     // This function is called while m_ReachedTarget is false 
     // Check void ASDTBaseAIController::Tick for how it works.
+	const TArray<FNavPathPoint>& points = GetPathFollowingComponent()->GetPath()->GetPathPoints();
+    for (int i = 0; i < points.Num() - 1; i++)
+    {
+		DrawDebugLine(GetWorld(), points[i].Location, points[i + 1].Location, FColor::Green, false, 0.1f, 0, 1);
+		DrawDebugSphere(GetWorld(), points[i].Location, 10.f, 8, FColor::Green, false, 0.1f, 0);
+	}
 }
 
 void ASDTAIController::ChooseBehavior(float deltaTime)

@@ -23,13 +23,17 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
     const FNavPathPoint& segmentEnd = points[MoveSegmentEndIndex];
 
-    if (SDTUtils::HasJumpFlag(segmentStart))
+
+    // Remplace SDTUtils::HasJumpFlag(segmentStart)
+    if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
         // Update jump along path / nav link proxy
+        
     }
     else
     {
         // Update navigation along path (move along)
+        Super::FollowPathSegment(DeltaTime);
     }
 }
 
@@ -52,6 +56,7 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     else
     {
         // Handle normal segments
+
     }
 }
 
