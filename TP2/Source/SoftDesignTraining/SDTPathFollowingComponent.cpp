@@ -23,23 +23,27 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
     const FNavPathPoint& segmentEnd = points[MoveSegmentEndIndex];
 
+    ASDTAIController* aiController = Cast<ASDTAIController>(GetOwner());
+    auto p = aiController->GetPawn();
+
+    speed = MovementComp->Velocity.Size() / MovementComp->GetMaxSpeed();
+
     // Remplace SDTUtils::HasJumpFlag(segmentStart)
     if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
         // Update jump along path / nav link proxy
-        ASDTAIController* aiController = Cast<ASDTAIController>(GetOwner());
-        auto p = aiController->GetPawn();
 
         FVector2D pos2D = FVector2D(p->GetActorLocation().X, p->GetActorLocation().Y);
 
         float distance = FVector::Dist(segmentStart.Location, segmentEnd.Location);
         float distanceToStart = FVector2D::Distance(FVector2D(segmentStart.Location.X, segmentStart.Location.Y), pos2D);
-        float progress = distanceToStart / distance;
+
+        jumpProgress = distanceToStart / distance;
 
         UCurveFloat *jumpCurve = aiController->JumpCurve;
 
         FVector position = aiController->GetPawn()->GetActorLocation();
-        float zValue = jumpCurve->GetFloatValue(progress);
+        float zValue = jumpCurve->GetFloatValue(jumpProgress);
 
         position.Z = m_beforeJumpZ + zValue * aiController->JumpApexHeight;
 
@@ -67,18 +71,24 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
 
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
 
+    ASDTAIController* aiController = Cast<ASDTAIController>(GetOwner());
+
     // SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink()
     if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
-        GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Nav Link"));
         // Handle starting jump
         m_beforeJumpZ = GetOwner()->GetActorLocation().Z;
+
+        aiController->AtJumpSegment = true;
+        aiController->InAir = true;
 
     }
     else
     {
         // Handle normal segments
-
+        aiController->AtJumpSegment = false;
+        aiController->InAir = false;
+        jumpProgress = 0.0f;
     }
 }
 

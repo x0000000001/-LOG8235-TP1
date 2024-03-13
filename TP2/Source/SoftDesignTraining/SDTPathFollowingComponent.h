@@ -21,5 +21,8 @@ public:
     float m_beforeJumpZ;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    UCurveFloat *JumpCurve;
+    float speed;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
+    float jumpProgress;
 };
