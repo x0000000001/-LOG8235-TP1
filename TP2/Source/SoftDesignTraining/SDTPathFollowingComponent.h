@@ -20,6 +20,4 @@ public:
 
     float m_beforeJumpZ;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
-    UCurveFloat *JumpCurve;
 };

@@ -48,6 +48,17 @@ public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void AIStateInterrupted();
 
+    //LKP 
+    FVector m_lastPlayerLocation;
+    enum class AIState : uint8
+    {
+        Player_Seen,
+        Investigating_LKP,
+        Fleeing,
+        Collecting_Pickups,
+    };
+    AIState m_currentState = AIState::Collecting_Pickups;
+
 protected:
     void OnMoveToTarget();
     void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);

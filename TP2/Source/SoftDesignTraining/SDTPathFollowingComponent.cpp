@@ -36,14 +36,14 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         float distanceToStart = FVector2D::Distance(FVector2D(segmentStart.Location.X, segmentStart.Location.Y), pos2D);
         float progress = distanceToStart / distance;
 
-        UCurveFloat *jumpCurve = aiController->JumpCurve;
+        UCurveFloat* jumpCurve = aiController->JumpCurve;
 
         FVector position = aiController->GetPawn()->GetActorLocation();
         float zValue = jumpCurve->GetFloatValue(progress);
 
         position.Z = m_beforeJumpZ + zValue * aiController->JumpApexHeight;
 
-        p -> SetActorLocation(position);
+        p->SetActorLocation(position);
 
         Super::FollowPathSegment(DeltaTime);
 
@@ -67,18 +67,23 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
 
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
 
+    ASDTAIController* aiController = Cast<ASDTAIController>(GetOwner());
+
     // SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink()
     if (FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
-        GEngine -> AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Nav Link"));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Nav Link"));
         // Handle starting jump
         m_beforeJumpZ = GetOwner()->GetActorLocation().Z;
+
+        aiController->AtJumpSegment = true;
+        aiController->InAir = true;
 
     }
     else
     {
         // Handle normal segments
-
+        aiController->AtJumpSegment = false;
+        aiController->InAir = false;
     }
 }
-
