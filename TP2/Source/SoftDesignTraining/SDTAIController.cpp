@@ -23,14 +23,22 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
     {
         UWorld* world = GetWorld();
         TArray<AActor*> collectibles;
+        TArray<AActor*> fleeingLocations;
 
         if (world) {
             UGameplayStatics::GetAllActorsOfClass(world, ASDTCollectible::StaticClass(), collectibles);
+            UGameplayStatics::GetAllActorsOfClass(world, ASDTFleeLocation::StaticClass(), fleeingLocations);
         }
         switch (m_currentState) {
             case AIState::Player_Seen:
                 DrawDebugSphere(GetWorld(), m_lastPlayerLocation, 30.0f, 32, FColor::Purple);
-                MoveToLocation(m_lastPlayerLocation, 5.f);
+
+                if (SDTUtils::IsPlayerPoweredUp(world)) {
+                    m_currentState = AIState::Fleeing;
+                }
+				else {
+					MoveToLocation(m_lastPlayerLocation, 5.f);
+				}
                 break;
             case AIState::Investigating_LKP:
                 // Finish the last MoveToLocation before giving up on the hunt
@@ -38,6 +46,45 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
                 break;
                 // more cases can follow
             case AIState::Fleeing:
+                if (fleeingLocations.Num() > 0) {
+					float minDistance = TNumericLimits<float>::Max();
+					ASDTFleeLocation* closestFleeLocation = nullptr;
+					for (AActor* fleeLocationActor : fleeingLocations)
+					{
+						ASDTFleeLocation* fleeLocation = Cast<ASDTFleeLocation>(fleeLocationActor);
+						if (fleeLocation)
+						{
+							float distance = TNumericLimits<float>::Max();
+							UNavigationPath* path = UNavigationSystemV1::FindPathToActorSynchronously(this, GetPawn()->GetActorLocation(), fleeLocation);
+							if (path && path->GetPath().IsValid() && !path->GetPath()->IsPartial() && path->GetPath()->GetPathPoints().Num() != 0)
+							{
+								distance = path->GetPathLength();
+								//GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, FString::Printf(TEXT("Distance to closest fleeing loc: %f"), distance));
+                                // Check if the flee location is too close to m_lastPlayerLocation
+                                float distanceToLastPlayerLocation = FVector::Dist(fleeLocation->GetActorLocation(), m_lastPlayerLocation);
+                                if (distanceToLastPlayerLocation < 1400.f) {
+                                    continue; // Skip this flee location since player is near it (maybe camping)
+                                }
+                            }
+							if (distance < minDistance)
+							{
+								minDistance = distance;
+								closestFleeLocation = fleeLocation;
+							}
+						}
+					}
+					if (closestFleeLocation != nullptr) {
+						MoveToLocation(closestFleeLocation->GetActorLocation(), 5.f);
+					}
+					else {
+						//GEngine->AddOnScreenDebugMessage(1, 1.f, FColor::Red, TEXT("NO FLEE LOCATION REACHABLE"));
+                        // All options are bad, pick the first one (otherwise game may crash)
+                        MoveToLocation(fleeingLocations[0]->GetActorLocation(), 5.f);
+						return;
+					}
+					m_ReachedTarget = false;
+					return;
+				}
                 break;
             case AIState::Collecting_Pickups:
                 if (collectibles.Num() > 0) {
@@ -92,7 +139,7 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
     
     Super::OnMoveCompleted(RequestID, Result);
     // if we reached the target without seeing player, we can go back to collecting collectibles
-    if (m_currentState == AIState::Investigating_LKP)
+    if (m_currentState == AIState::Investigating_LKP || m_currentState == AIState::Fleeing)
 	{
 		m_currentState = AIState::Collecting_Pickups;
 	}
@@ -105,6 +152,7 @@ void ASDTAIController::ShowNavigationPath()
     // Use the UPathFollowingComponent of the AIController to get the path
     // This function is called while m_ReachedTarget is false 
     // Check void ASDTBaseAIController::Tick for how it works.
+
 	const TArray<FNavPathPoint>& points = GetPathFollowingComponent()->GetPath()->GetPathPoints();
     for (int i = 0; i < points.Num() - 1; i++)
     {
@@ -163,7 +211,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
     {
         if (UPrimitiveComponent* component = hit.GetComponent())
         {
-            if (component->GetCollisionObjectType() == COLLISION_PLAYER)
+            if (component->GetCollisionObjectType() == COLLISION_PLAYER && m_currentState != AIState::Fleeing)
             {
                 UWorld* npcWorld = GetWorld();
                 // Quickly check if there is a direct line of sight between the AI and the player
@@ -171,7 +219,7 @@ void ASDTAIController::GetHightestPriorityDetectionHit(const TArray<FHitResult>&
                 FVector playerPos = hit.GetActor()->GetActorLocation() + FVector::UpVector * 100.0f;
                 if (!SDTUtils::Raycast(npcWorld, agentPos, playerPos))
                 {
-                    DrawDebugLine(npcWorld, agentPos, playerPos, FColor::Blue, false, 0.066f);
+                    DrawDebugLine(npcWorld, agentPos, playerPos, FColor::Orange, false, 0.066f);
                     m_currentState = AIState::Player_Seen;
                     outDetectionHit = hit;
 
