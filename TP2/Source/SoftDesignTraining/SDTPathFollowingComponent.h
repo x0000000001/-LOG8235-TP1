@@ -20,4 +20,9 @@ public:
 
     float m_beforeJumpZ;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+    float speed;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
+    float jumpProgress;
 };
