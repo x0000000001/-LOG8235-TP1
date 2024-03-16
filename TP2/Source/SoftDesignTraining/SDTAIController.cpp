@@ -198,8 +198,13 @@ void ASDTAIController::UpdatePlayerInteraction(float deltaTime)
     // Check ASDTAIController::AIStateInterrupted to stop your current path
     if (m_currentState == AIState::Player_Seen)
     {
-        m_lastPlayerLocation = detectionHit.GetActor()->GetActorLocation();
-        m_ReachedTarget = true; //Reset the target point so that the AI tracks down the player
+        // Update the path to the player if it was on the navmesh (otherwise, agent may be stucked)
+        UNavigationPath* path = UNavigationSystemV1::FindPathToActorSynchronously(this, GetPawn()->GetActorLocation(), detectionHit.GetActor());
+        if (path && path->GetPath().IsValid() && !path->GetPath()->IsPartial() && path->GetPath()->GetPathPoints().Num() != 0)
+        {
+            m_lastPlayerLocation = detectionHit.GetActor()->GetActorLocation();
+            m_ReachedTarget = true; //Reset the target point so that the AI tracks down the player
+        }
     }
 
     DrawDebugCapsule(GetWorld(), detectionStartLocation + m_DetectionCapsuleHalfLength * selfPawn->GetActorForwardVector(), m_DetectionCapsuleHalfLength, m_DetectionCapsuleRadius, selfPawn->GetActorQuat() * selfPawn->GetActorUpVector().ToOrientationQuat(), FColor::Blue);
