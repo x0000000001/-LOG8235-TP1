@@ -2,9 +2,13 @@
 
 #pragma once
 
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
 #include "SDTAIController.generated.h"
+
+
 
 /**
  * 
@@ -48,6 +52,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     UBehaviorTree* m_behaviorTree;
 
+    UBlackboardComponent* m_blackboard;
+
+    FVector m_JumpTarget;
+    FRotator m_ObstacleAvoidanceRotation;
+    FTimerHandle m_PlayerInteractionNoLosTimer;
+
 protected:
 
     enum PlayerInteractionBehavior
@@ -57,33 +67,22 @@ protected:
         PlayerInteractionBehavior_Flee
     };
 
-    void GetHightestPriorityDetectionHit(const TArray<FHitResult>& hits, FHitResult& outDetectionHit);
-    void UpdatePlayerInteractionBehavior(const FHitResult& detectionHit, float deltaTime);
-    PlayerInteractionBehavior GetCurrentPlayerInteractionBehavior(const FHitResult& hit);
-    bool HasLoSOnHit(const FHitResult& hit);
-    void PlayerInteractionLoSUpdate();
     void OnPlayerInteractionNoLosDone();
-
 
 public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
-    void AIStateInterrupted();
     void OnMoveToTarget();
-    void MoveToRandomCollectible();
-    void MoveToPlayer();
-    void MoveToBestFleeLocation();
+    void SetNoLosTimer();
+    void AIStateInterrupted();
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
-    virtual void UpdatePlayerInteraction(float deltaTime) override;
     virtual void ShowNavigationPath() override;
 
 
 protected:
-    FVector m_JumpTarget;
-    FRotator m_ObstacleAvoidanceRotation;
-    FTimerHandle m_PlayerInteractionNoLosTimer;
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
+
 };

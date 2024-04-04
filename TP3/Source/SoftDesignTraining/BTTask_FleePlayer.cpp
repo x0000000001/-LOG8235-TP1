@@ -15,11 +15,6 @@
 EBTNodeResult::Type UBTTask_FleePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {
 
     ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
-    if (aiController == nullptr)
-    {
-		return EBTNodeResult::Failed;
-	}
-
     float bestLocationScore = 0.f;
     ASDTFleeLocation* bestFleeLocation = nullptr;
 
@@ -56,9 +51,7 @@ EBTNodeResult::Type UBTTask_FleePlayer::ExecuteTask(UBehaviorTreeComponent& Owne
     if (bestFleeLocation)
     {
         aiController->MoveToLocation(bestFleeLocation->GetActorLocation(), 0.5f, false, true, false, NULL, false);
-
-        // Set blackboard value
-        UBlackboardComponent * blackboardComp = OwnerComp.GetBlackboardComponent();
+        aiController->OnMoveToTarget();
 
         return EBTNodeResult::Succeeded;
     }

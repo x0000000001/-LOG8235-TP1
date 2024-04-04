@@ -10,24 +10,7 @@
 
 EBTNodeResult::Type UBTTask_MoveToCollectible::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// Get the AI controller
-	ASDTAIController * aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
-	if (aiController == nullptr)
-	{
-		return EBTNodeResult::Failed;
-	}
-
-    if (!aiController->m_ReachedTarget)
-    {
-		return EBTNodeResult::Succeeded;
-	}
-
-    // Return if the AI is jumping
-    if (aiController->AtJumpSegment)
-    {
-		return EBTNodeResult::Failed;
-	}
-
+    ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
     float closestSqrCollectibleDistance = 18446744073709551610.f;
     ASDTCollectible* closestCollectible = nullptr;
 
@@ -53,7 +36,6 @@ EBTNodeResult::Type UBTTask_MoveToCollectible::ExecuteTask(UBehaviorTreeComponen
             foundCollectibles.RemoveAt(index);
         }
     }
-	
 
-	return EBTNodeResult::Failed;
+    return EBTNodeResult::Failed;
 }
