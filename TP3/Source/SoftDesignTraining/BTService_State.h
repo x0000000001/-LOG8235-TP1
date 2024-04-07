@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
+#include "SDTAIController.h"
 #include "BTService_State.generated.h"
 
 /**
@@ -36,4 +37,9 @@ public:
 public:
 
 	UBehaviorTreeComponent* m_OwnerComp;
+
+
+private:
+	void AddToGroup(ASDTAIController* aiController);
+	void RemoveFromGroup(ASDTAIController* aiController);
 };

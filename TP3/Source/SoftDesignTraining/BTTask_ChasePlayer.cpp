@@ -7,6 +7,7 @@
 #include "SDTAIController.h"
 #include "SDTFleeLocation.h"
 #include "EngineUtils.h"
+#include "AiAgentGroupManager.h"
 
 
 EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {

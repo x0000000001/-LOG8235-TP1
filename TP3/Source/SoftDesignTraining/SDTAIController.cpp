@@ -10,6 +10,7 @@
 //#include "UnrealMathUtility.h"
 #include "SDTUtils.h"
 #include "EngineUtils.h"
+#include "AiAgentGroupManager.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -29,6 +30,13 @@ void ASDTAIController::BeginPlay()
     if (m_blackboard) m_blackboard->SetValueAsEnum("EnumState", (uint8)PlayerInteractionBehavior_Collect);
     if (m_blackboard) m_blackboard->SetValueAsBool("ReachedTarget", true);
 
+}
+
+void ASDTAIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+    ShowNavigationPath();
+    ShowIsInGroup();
 }
 
 void ASDTAIController::SetNoLosTimer()
@@ -99,6 +107,21 @@ void ASDTAIController::ShowNavigationPath()
             }
         }
     }
+}
+
+void ASDTAIController::ShowIsInGroup()
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+
+    if (aiAgentGroupManager)
+    {
+        if (aiAgentGroupManager->IsAgentInGroup(this))
+        {
+            FVector agentLocation = GetPawn()->GetActorLocation();
+            agentLocation.Z += 100.0f;
+            DrawDebugCircle(GetWorld(), agentLocation, 50.f, 32, FColor::Blue, false, 0.1f);
+		}
+	}
 }
 
 void ASDTAIController::AIStateInterrupted()

@@ -6,6 +6,7 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 #include "BTService_State.h"
+#include "AiAgentGroupManager.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -105,6 +106,15 @@ void UBTService_State::UpdatePlayerInteractionBehavior(const FHitResult& detecti
     uint8 currentBehaviorInt = OwnerComp.GetBlackboardComponent()->GetValueAsEnum(TEXT("EnumState"));
     PlayerInteractionBehavior savedBehavior = PlayerInteractionBehavior(currentBehaviorInt);
 
+    if (currentBehavior == PlayerInteractionBehavior_Chase)
+    {
+        AddToGroup(aiController);
+    }
+    else
+    {
+        RemoveFromGroup(aiController);
+    }
+
     if (currentBehavior != savedBehavior)
     {
         OwnerComp.GetBlackboardComponent()->SetValueAsEnum(TEXT("EnumState"), uint8(currentBehavior));
@@ -201,4 +211,28 @@ void UBTService_State::PlayerInteractionLoSUpdate(UBehaviorTreeComponent& OwnerC
         }
     }
 
+}
+
+void UBTService_State::AddToGroup(ASDTAIController* aiController)
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+
+    if (!aiAgentGroupManager) return;
+
+    if (!aiAgentGroupManager->IsAgentInGroup(aiController))
+    {
+		aiAgentGroupManager->RegisterAIAgent(aiController);
+	}
+	
+}
+
+void UBTService_State::RemoveFromGroup(ASDTAIController* aiController)
+{
+    UE_LOG(LogTemp, Warning, TEXT("RemoveFromGroup"));
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+    if (aiAgentGroupManager)
+    {
+		aiAgentGroupManager->UnregisterAIAgent(aiController);
+	}
+	
 }
