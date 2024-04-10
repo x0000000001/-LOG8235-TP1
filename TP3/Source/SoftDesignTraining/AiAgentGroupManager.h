@@ -17,6 +17,7 @@ public:
     bool IsAgentInGroup(ASDTAIController* aiAgent);
 
     TargetLKPInfo GetLKPFromGroup(const FString& targetLabel, bool& targetFound);
+    TArray<float> GetDistancesToAgents(ASDTAIController* aiAgent);
 
 private:
 

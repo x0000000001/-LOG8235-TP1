@@ -66,3 +66,21 @@ TargetLKPInfo AiAgentGroupManager::GetLKPFromGroup(const FString& targetLabel, b
 
     return outLKPInfo;
 }
+
+// takes an agent to compare to as an input, Return an array with the distance to each agent in the group
+TArray<float> AiAgentGroupManager::GetDistancesToAgents(ASDTAIController* aiAgent)
+{
+	TArray<float> distances;
+	int agentCount = m_registeredAgents.Num();
+
+    for (int i = 0; i < agentCount; ++i)
+    {
+		ASDTAIController* otherAgent = m_registeredAgents[i];
+        if (otherAgent && otherAgent != aiAgent)
+        {
+			distances.Add(FVector::Dist(aiAgent->GetPawn()->GetActorLocation(), otherAgent->GetPawn()->GetActorLocation()));
+		}
+	}
+
+	return distances;
+}

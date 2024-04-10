@@ -140,13 +140,23 @@ UBTService_State::PlayerInteractionBehavior UBTService_State::GetCurrentPlayerIn
 
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
     }
-    else
+    else if (currentBehavior == PlayerInteractionBehavior_Flee)
     {
         PlayerInteractionLoSUpdate(OwnerComp);
 
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
     }
+    else if (currentBehavior == PlayerInteractionBehavior_Chase) {
+
+        if (!HasLoSOnHit(hit))
+            return PlayerInteractionBehavior_Collect;
+
+        return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
+    }
+
+    return PlayerInteractionBehavior_Collect;
 }
+
 
 bool UBTService_State::HasLoSOnHit(const FHitResult& hit)
 {
