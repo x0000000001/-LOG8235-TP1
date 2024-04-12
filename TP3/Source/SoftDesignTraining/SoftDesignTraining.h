@@ -9,6 +9,22 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSoftDesignTraining, Log, All);
 
 class SoftDesignTrainingModuleImpl : public FDefaultGameModuleImpl
 {
+public:
+    SoftDesignTrainingModuleImpl();
+    virtual ~SoftDesignTrainingModuleImpl();
+
+    virtual void StartupModule();
+
+    static void WorldTickStart(UWorld*, ELevelTick, float);
+
+    static void WorldBeginPlay();
+
+    static void WorldPostActorTick(UWorld* /*World*/, ELevelTick/**Tick Type*/, float/**Delta Seconds*/);
+
+    static void WorldCleanup(UWorld*, bool, bool);
+
+    virtual void ShutdownModule();
 };
+
 
 #endif

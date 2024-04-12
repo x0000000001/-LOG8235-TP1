@@ -20,7 +20,11 @@ ASoftDesignTrainingGameMode::ASoftDesignTrainingGameMode()
 
 void ASoftDesignTrainingGameMode::StartPlay()
 {
-    Super::StartPlay();
+	// To initialize the AiPerformanceManager
+	SoftDesignTrainingModuleImpl::WorldBeginPlay();
+
+	Super::StartPlay();
+
 
     GetWorld()->Exec(GetWorld(), TEXT("stat fps"));
 }

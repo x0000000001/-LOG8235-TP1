@@ -70,6 +70,14 @@ protected:
     void OnPlayerInteractionNoLosDone();
 
 public:
+    enum AiLOD
+	{
+		AiLOD_Low,
+		AiLOD_Medium,
+		AiLOD_High,
+        AiLOD_Invisible
+	};
+
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void RotateTowards(const FVector& targetLocation);
     void SetActorLocation(const FVector& targetLocation);
@@ -79,6 +87,11 @@ public:
     const TargetLKPInfo& GetCurrentTargetLKPInfo() const { return m_currentTargetLkpInfo; }
     void ShowIsInGroup();
     void Tick(float DeltaTime);
+    bool IsAllowedToRun();
+    void SetAllowedToRun(bool allowedToRun);
+    virtual ASDTAIController::AiLOD GetCurrentLOD() { return m_currentLOD; }
+    virtual void UpdateLOD(float DeltaTime);
+
 
 private:
     virtual void ShowNavigationPath() override;
@@ -86,8 +99,10 @@ private:
     //LKP 
     TargetLKPInfo m_currentTargetLkpInfo;
     //bool          m_isInvestigatingLKP;
+    bool bIsAllowedToRun = false;
+
 
 protected:
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
-
+    AiLOD m_currentLOD;
 };

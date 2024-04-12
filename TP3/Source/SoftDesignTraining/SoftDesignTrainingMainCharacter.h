@@ -15,10 +15,13 @@ class SOFTDESIGNTRAINING_API ASoftDesignTrainingMainCharacter : public ASoftDesi
     GENERATED_BODY()
 public:
     ASoftDesignTrainingMainCharacter();
-
+    virtual void BeginPlay() override;
     virtual void OnCollectPowerUp() override;
 
     bool IsPoweredUp() { return m_IsPoweredUp; }
+
+    /** Returns TopDownCameraComponent subobject **/
+    FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return m_TopDownCameraComponent; }
 
 protected:
     virtual void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
