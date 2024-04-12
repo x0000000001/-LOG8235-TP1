@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "SoftDesignTraining.h"
 #include "SDTAIController.h"
+#include "PriorityQueue.h"
 
 /**
  * 
@@ -18,6 +19,7 @@ private:
     ~AiPerformanceManager();
 
     TArray<ASDTAIController*> m_Agents;
+    TPriorityQueue<ASDTAIController*> AgentPriorityQueue;
     static AiPerformanceManager* m_Instance;
     static FDelegateHandle m_TickDelegateHandle;
 

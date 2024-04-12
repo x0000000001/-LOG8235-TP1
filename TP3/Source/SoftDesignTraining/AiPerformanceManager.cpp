@@ -10,6 +10,8 @@
 #include "ObjectPartition.h"
 #include "SDTUtils.h"
 
+#define TIMEBUDGET 2.0f
+
 AiPerformanceManager* AiPerformanceManager::m_Instance;
 FDelegateHandle AiPerformanceManager::m_TickDelegateHandle;
 
@@ -42,7 +44,7 @@ void AiPerformanceManager::Destroy()
 void AiPerformanceManager::RegisterAgent(ASDTAIController* npcCharacter)
 {
     m_Agents.Add(npcCharacter);
-
+    AgentPriorityQueue.Push(npcCharacter, npcCharacter->GetCurrentLOD() + 1);
     // TODO more optimization : intermediate LOD where AI far from player = less updates
     //ObjectPartition* op = ObjectPartition::GetInstance();
     //op->RegisterObject(npcCharacter);
@@ -76,24 +78,50 @@ void AiPerformanceManager::UnregisterPlayer(AActor* player)
     m_PlayerInstance.Remove(player);
 }
 
+//TODO increase priority if wasn't updated in the current frame
+
+
 void AiPerformanceManager::TickWorld(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
-    
 
-    for (ASDTAIController* agent : m_Instance->m_Agents)
-	{
+    // Track the total time spent updating behavior trees
+    float TimeSpent = 0.0f;
 
-		if (agent->GetPawn() == nullptr)
-		{
-			continue;
-		}
+    TArray<ASDTAIController*> AgentsExecuted;
 
-		if (agent->GetCurrentLOD() == ASDTAIController::AiLOD_Invisible)
-		{
-			agent->SetAllowedToRun(false);
-		} else
-		{
-			agent->SetAllowedToRun(true);
-		}
+    // Process agents until time budget is exhausted or queue is empty
+    while (!AgentPriorityQueue.IsEmpty() && TimeSpent < TIMEBUDGET)
+    {
+        // Pop the highest priority agent from the queue
+        ASDTAIController* Agent = AgentPriorityQueue.Pop();
+
+        // Update the agent
+        if (Agent->GetCurrentLOD() != ASDTAIController::AiLOD_Invisible) {
+            Agent->SetAllowedToRun(true); // Allow the agent to run
+            // Update the total time spent
+            TimeSpent += 0.2f;
+        }
+        AgentsExecuted.Add(Agent);
+    }
+    AgentPriorityQueue.UpdatePriority();
+    for (ASDTAIController* Agent : AgentsExecuted)
+    {
+        // Put the agent back into the queue with updated priority based on LOD settings
+        AgentPriorityQueue.Push(Agent, Agent->GetCurrentLOD() + 1);
 	}
+
+    /*
+    // Process agents until time budget is exhausted or queue is empty
+    for (ASDTAIController* Agent : m_Agents)
+    {
+        // Update the agent
+        if (Agent->GetCurrentLOD() != ASDTAIController::AiLOD_Invisible) {
+            Agent->SetAllowedToRun(true); // Allow the agent to run
+            // Update the total time spent
+            TimeSpent += 0.2f;
+        }
+    }
+    */
+
+
 }

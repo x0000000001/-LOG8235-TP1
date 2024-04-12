@@ -1,3 +1,6 @@
+#ifndef PRIORITYQUEUE_H
+#define PRIORITYQUEUE_H
+
 template <typename InElementType>
 struct TPriorityQueueNode {
     InElementType Element;
@@ -53,6 +56,18 @@ public:
         return Array.Num() == 0;
     }
 
+    void UpdatePriority()
+    {
+        for (TPriorityQueueNode<InElementType>& Node : Array)
+        {
+            Node.Priority = (Node.Priority == 0) ? 0 : Node.Priority - 1;
+        }
+        // Re-heapify the array once after updating priorities for all elements
+        Array.Heapify();
+    }
+
 private:
     TArray<TPriorityQueueNode<InElementType>> Array;
 };
+
+#endif PRIORITYQUEUE_H

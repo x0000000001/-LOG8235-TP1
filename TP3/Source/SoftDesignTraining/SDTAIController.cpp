@@ -41,10 +41,12 @@ void ASDTAIController::BeginPlay()
     if (m_blackboard) m_blackboard->SetValueAsEnum("EnumState", (uint8)PlayerInteractionBehavior_Collect);
     if (m_blackboard) m_blackboard->SetValueAsBool("ReachedTarget", true);
 
+
 }
 
 void ASDTAIController::Tick(float DeltaTime)
 {
+
 	Super::Tick(DeltaTime);
     ShowNavigationPath();
     ShowIsInGroup();

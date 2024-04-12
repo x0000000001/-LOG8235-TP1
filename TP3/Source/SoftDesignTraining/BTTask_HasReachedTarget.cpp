@@ -2,6 +2,7 @@
 
 
 #include "BTTask_HasReachedTarget.h"
+#include "SDTAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 EBTNodeResult::Type UBTTask_HasReachedTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {
@@ -15,6 +16,12 @@ EBTNodeResult::Type UBTTask_HasReachedTarget::ExecuteTask(UBehaviorTreeComponent
 			return EBTNodeResult::Succeeded;
 		}
 	}
+	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
+	if (aiController == nullptr)
+	{
+		return EBTNodeResult::Failed;
+	}
 
+	aiController->SetAllowedToRun(false);
 	return EBTNodeResult::Failed;
 }
