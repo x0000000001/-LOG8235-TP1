@@ -6,14 +6,15 @@
 #include "SDTUtils.h"
 #include "EngineUtils.h"
 #include "BTService_State.h"
+#include "AiAgentGroupManager.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 
 void UBTService_State::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
     if (!m_OwnerComp) {
-		m_OwnerComp = &OwnerComp;
-	}
+        m_OwnerComp = &OwnerComp;
+    }
 
     UpdatePlayerInteraction(DeltaSeconds, OwnerComp);
 }
@@ -105,6 +106,17 @@ void UBTService_State::UpdatePlayerInteractionBehavior(const FHitResult& detecti
     uint8 currentBehaviorInt = OwnerComp.GetBlackboardComponent()->GetValueAsEnum(TEXT("EnumState"));
     PlayerInteractionBehavior savedBehavior = PlayerInteractionBehavior(currentBehaviorInt);
 
+    if (currentBehavior == PlayerInteractionBehavior_Chase)
+    {
+        AddToGroup(aiController);
+        OwnerComp.GetBlackboardComponent()->SetValueAsBool(TEXT("IsInGroup"), true);
+    }
+    else
+    {
+        RemoveFromGroup(aiController);
+        OwnerComp.GetBlackboardComponent()->SetValueAsBool(TEXT("IsInGroup"), false);
+    }
+
     if (currentBehavior != savedBehavior)
     {
         OwnerComp.GetBlackboardComponent()->SetValueAsEnum(TEXT("EnumState"), uint8(currentBehavior));
@@ -114,29 +126,118 @@ void UBTService_State::UpdatePlayerInteractionBehavior(const FHitResult& detecti
 
 UBTService_State::PlayerInteractionBehavior UBTService_State::GetCurrentPlayerInteractionBehavior(const FHitResult& hit, UBehaviorTreeComponent& OwnerComp)
 {
+    ASDTAIController * aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner()); 
+    AiAgentGroupManager* groupManager = AiAgentGroupManager::GetInstance();
+
     uint8 currentBehaviorInt = OwnerComp.GetBlackboardComponent()->GetValueAsEnum(TEXT("EnumState"));
     PlayerInteractionBehavior currentBehavior = PlayerInteractionBehavior(currentBehaviorInt);
+
+    GEngine = GetWorld()->GetGameInstance()->GetEngine();
 
     if (currentBehavior == PlayerInteractionBehavior_Collect)
     {
         if (!hit.GetComponent())
-            return PlayerInteractionBehavior_Collect;
+            return PlayerInteractionBehavior_Collect; //idle
 
         if (hit.GetComponent()->GetCollisionObjectType() != COLLISION_PLAYER)
             return PlayerInteractionBehavior_Collect;
 
         if (!HasLoSOnHit(hit))
+        {
+            //si on a joueur dans le sweep mais pas de LOS et qu'on est en train de collecter
             return PlayerInteractionBehavior_Collect;
+        }
+
+        //ici vu joueur && los
+        //set blackboard vector to chase
+        aiController->m_lkp = hit.ImpactPoint;
+        aiController->m_lkpTimestamp = GetWorld()->GetTimeSeconds();
+
+        //debug print une sphere rouge à l'impact point
+        DrawDebugSphere(GetWorld(), hit.ImpactPoint, 10.f, 12, FColor::Orange, false, 1.f);
 
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
     }
-    else
+    else if (currentBehavior == PlayerInteractionBehavior_Chase) // en train de chasser
+    {
+        FVector lkpGroup = GetGroupLkp();
+        
+        // Mise à jour du LKP du groupe
+        if (lkpGroup != FVector::ZeroVector)
+        {
+            OwnerComp.GetBlackboardComponent()->ClearValue(TEXT("LastKnowPos")); //LKP cleared
+            OwnerComp.GetBlackboardComponent()->SetValueAsVector(TEXT("LastKnowPos"), lkpGroup); //LKP updated
+        } else {
+            return PlayerInteractionBehavior_Collect;
+		}
+
+        // Si le joueur est dans le sweep et qu'on a un LOS
+        if (hit.GetComponent() && hit.GetComponent()->GetCollisionObjectType() == COLLISION_PLAYER && HasLoSOnHit(hit))
+        {
+            aiController->m_lkp = hit.ImpactPoint;
+            aiController->m_lkpTimestamp = GetWorld()->GetTimeSeconds();
+            DrawDebugSphere(GetWorld(), hit.ImpactPoint, 10.f, 12, FColor::Orange, false, 1.f);
+
+            return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
+
+        }
+
+        //Si le joueur n'est pas dans le sweep
+        else 
+        {
+            // Si le LKP est trop vieux, on passe en collecte
+            if (AiAgentGroupManager::GetInstance()->m_lastLKPUpdateTime + AiAgentGroupManager::GetInstance()->m_thresholdTime < GetWorld()->GetTimeSeconds())
+            {
+                return PlayerInteractionBehavior_Collect;
+			}
+        }
+
+        //On continue de chasser
+        return PlayerInteractionBehavior_Chase; 
+
+    }
+    else //si on fuit, code du prof
     {
         PlayerInteractionLoSUpdate(OwnerComp);
 
         return SDTUtils::IsPlayerPoweredUp(GetWorld()) ? PlayerInteractionBehavior_Flee : PlayerInteractionBehavior_Chase;
+
     }
+
 }
+
+/* Not used since not needed pour le tp
+ bool UBTService_State::HasLoSOnPlayer()
+{
+    ASDTAIController* aiController = Cast<ASDTAIController>(m_OwnerComp->GetAIOwner());
+    if (!aiController)
+        return false;
+
+    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+    if (!playerCharacter)
+        return false;
+
+    TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
+    TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+    TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(COLLISION_PLAYER));
+
+    FHitResult losHit;
+    GetWorld()->LineTraceSingleByObjectType(losHit, aiController->GetPawn()->GetActorLocation(), playerCharacter->GetActorLocation(), TraceObjectTypes);
+
+    return losHit.GetActor() == playerCharacter;
+}*/
+
+bool UBTService_State::IsNearLkp(const UBehaviorTreeComponent& OwnerComp, FVector lkpGroup)
+{
+    //get the current location of the AI, and the location of the LKP in the blackboard (in OwnerComp)
+    ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
+    FVector currentLocation = aiController->GetPawn()->GetActorLocation();
+
+    if (lkpGroup == FVector::ZeroVector)
+        return true;
+    return FVector::Dist(currentLocation, lkpGroup) < m_DistanceToLKPThreshold; //si on est assez proche du lkp
+}
+
 
 bool UBTService_State::HasLoSOnHit(const FHitResult& hit)
 {
@@ -201,4 +302,40 @@ void UBTService_State::PlayerInteractionLoSUpdate(UBehaviorTreeComponent& OwnerC
         }
     }
 
+}
+
+void UBTService_State::AddToGroup(ASDTAIController* aiController)
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+
+    if (!aiAgentGroupManager) return;
+
+    if (!aiAgentGroupManager->IsAgentInGroup(aiController))
+    {
+        aiAgentGroupManager->RegisterAIAgent(aiController);
+    }
+
+}
+
+void UBTService_State::RemoveFromGroup(ASDTAIController* aiController)
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+    if (aiAgentGroupManager)
+    {
+        aiAgentGroupManager->UnregisterAIAgent(aiController);
+    }
+
+}
+
+FVector UBTService_State::GetGroupLkp()
+{
+    AiAgentGroupManager* aiAgentGroupManager = AiAgentGroupManager::GetInstance();
+    FVector groupLkp = FVector::ZeroVector;
+
+    if (aiAgentGroupManager)
+    {
+        groupLkp = aiAgentGroupManager->GetLKPFromGroup();
+    }
+
+    return groupLkp;
 }

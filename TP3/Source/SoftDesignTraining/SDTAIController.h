@@ -2,13 +2,13 @@
 
 #pragma once
 
+
+#include "TargetLKPInfo.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
 #include "SDTAIController.generated.h"
-
-
 
 /**
  * 
@@ -52,11 +52,17 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     UBehaviorTree* m_behaviorTree;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     UBlackboardComponent* m_blackboard;
 
     FVector m_JumpTarget;
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
+
+    FVector   m_lkp = FVector::ZeroVector;
+    float     m_lkpTimestamp = 0.0f;
+
+    FVector m_currentTargetLocation = FVector::ZeroVector;
 
 protected:
 
@@ -76,11 +82,17 @@ public:
     void OnMoveToTarget();
     void SetNoLosTimer();
     void AIStateInterrupted();
+    const TargetLKPInfo& GetCurrentTargetLKPInfo() const { return m_currentTargetLkpInfo; }
+    void ShowIsInGroup();
+
+    void Tick(float DeltaTime);
 
 private:
-    virtual void GoToBestTarget(float deltaTime) override;
     virtual void ShowNavigationPath() override;
 
+    //LKP 
+    TargetLKPInfo m_currentTargetLkpInfo;
+    //bool          m_isInvestigatingLKP;
 
 protected:
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
