@@ -66,11 +66,6 @@ void ASDTAIController::BeginPlay()
         
         moveComp = character->GetCharacterMovement();
 
-        if (moveComp)
-        {
-            moveComp->SetMovementMode(MOVE_Walking);
-
-        }
     }
 
 
@@ -83,7 +78,7 @@ void ASDTAIController::Tick(float DeltaTime)
 		Super::Tick(TimeSinceLastUpdate + DeltaTime);
 		//ShowNavigationPath();
         //ShowLOD();
-		//ShowIsInGroup();
+		ShowIsInGroup();
         TimeSinceLastUpdate = 0.0f;
     }
     else {
@@ -243,7 +238,7 @@ void ASDTAIController::ShowIsInGroup()
         {
             FVector agentLocation = GetPawn()->GetActorLocation();
             agentLocation.Z += 100.0f;
-            DrawDebugCircle(GetWorld(), agentLocation, 50.f, 32, FColor::Blue, false, 0.1f);
+            DrawDebugCircle(GetWorld(), agentLocation, 20.f, 32, FColor::Blue, false, 0.1f);
 		}
 	}
 }

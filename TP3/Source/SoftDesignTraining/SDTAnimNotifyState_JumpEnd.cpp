@@ -1,12 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SDTAnimNotify_JumpEnd.h"
+
+#include "SDTAnimNotifyState_JumpEnd.h"
+
 #include "SoftDesignTraining.h"
 #include "SDTAIController.h"
 #include "SoftDesignTrainingCharacter.h"
 
-void USDTAnimNotify_JumpEnd::Notify(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation)
-{
+
+
+
+void USDTAnimNotifyState_JumpEnd::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration){
     if (AActor* owner = MeshComp->GetOwner())
     {
         if (ASoftDesignTrainingCharacter* character = Cast<ASoftDesignTrainingCharacter>(owner))
@@ -18,4 +22,8 @@ void USDTAnimNotify_JumpEnd::Notify(USkeletalMeshComponent * MeshComp, UAnimSequ
             }
         }
     }
+}
+
+void USDTAnimNotifyState_JumpEnd::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime) {
+	//"Disable" tick of NotifyStateAnim
 }
