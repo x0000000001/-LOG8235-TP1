@@ -53,11 +53,17 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
     UBehaviorTree* m_behaviorTree;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     UBlackboardComponent* m_blackboard;
 
     FVector m_JumpTarget;
     FRotator m_ObstacleAvoidanceRotation;
     FTimerHandle m_PlayerInteractionNoLosTimer;
+
+    FVector   m_lkp = FVector::ZeroVector;
+    float     m_lkpTimestamp = 0.0f;
+
+    FVector m_currentTargetLocation = FVector::ZeroVector;
 
 protected:
 
@@ -107,6 +113,9 @@ private:
     UCharacterMovementComponent* moveComp;
     USkeletalMeshComponent* meshComp;
 
+    //LKP 
+    TargetLKPInfo m_currentTargetLkpInfo;
+    //bool          m_isInvestigatingLKP;
 
 protected:
     PlayerInteractionBehavior m_PlayerInteractionBehavior;

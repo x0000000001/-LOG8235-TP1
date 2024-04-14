@@ -13,12 +13,14 @@
 EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) {
 
     ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
-    ACharacter* playerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-    if (!playerCharacter)
+    FVector Lkp = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TEXT("LastKnowPos")); //get la lkp
+
+    if (Lkp == FVector::ZeroVector)
         return EBTNodeResult::Failed;
 
-    aiController->MoveToActor(playerCharacter, 0.5f, false, true, true, NULL, false);
+    aiController->MoveToLocation(Lkp);
     aiController->OnMoveToTarget();
+    aiController->m_currentTargetLocation = Lkp;
 
     return EBTNodeResult::Succeeded;
 }

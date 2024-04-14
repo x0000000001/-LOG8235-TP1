@@ -34,6 +34,9 @@ void ASDTAIController::BeginPlay()
         perfManager->RegisterAgent(this);
     }
     
+
+    AiAgentGroupManager::GetInstance()->Destroy();ch
+
     if (m_behaviorTree) RunBehaviorTree(m_behaviorTree);
 
     m_blackboard = GetBlackboardComponent();
@@ -121,7 +124,7 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
                     cameraDistVec.Normalize();
                     float dotProduct = cameraVec | cameraDistVec;
 
-                    if (dotProduct < 0.0f) // l'agent est derrière la caméra
+                    if (dotProduct < 0.0f) // l'agent est derriï¿½re la camï¿½ra
                     {
                         m_currentLOD = AiLOD_Invisible;
                     }
@@ -158,6 +161,13 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
             }
         }
     }
+}
+
+void ASDTAIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+    ShowNavigationPath();
+    ShowIsInGroup();
 }
 
 void ASDTAIController::SetNoLosTimer()

@@ -7,7 +7,7 @@
 #include "BTTask_ChasePlayer.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class SOFTDESIGNTRAINING_API UBTTask_ChasePlayer : public UBTTaskNode
@@ -16,5 +16,5 @@ class SOFTDESIGNTRAINING_API UBTTask_ChasePlayer : public UBTTaskNode
 
 public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
+
 };

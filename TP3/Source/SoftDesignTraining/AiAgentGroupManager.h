@@ -14,10 +14,14 @@ public:
 
     void RegisterAIAgent(ASDTAIController* aiAgent);
     void UnregisterAIAgent(ASDTAIController* aiAgent);
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AI)
     bool IsAgentInGroup(ASDTAIController* aiAgent);
 
-    TargetLKPInfo GetLKPFromGroup(const FString& targetLabel, bool& targetFound);
-    TArray<float> GetDistancesToAgents(ASDTAIController* aiAgent);
+    FVector GetLKPFromGroup();
+
+    float m_lastLKPUpdateTime = 0.f;
+    float m_thresholdTime = 5.f;
 
 private:
 
@@ -26,5 +30,4 @@ private:
     static AiAgentGroupManager* m_Instance;
 
     TArray<ASDTAIController*> m_registeredAgents;
-
 };

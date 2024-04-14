@@ -41,46 +41,32 @@ bool AiAgentGroupManager::IsAgentInGroup(ASDTAIController* aiAgent)
 	return m_registeredAgents.Contains(aiAgent);
 }
 
-TargetLKPInfo AiAgentGroupManager::GetLKPFromGroup(const FString& targetLabel, bool& targetfound)
+FVector AiAgentGroupManager::GetLKPFromGroup()
 {
     int agentCount = m_registeredAgents.Num();
-    TargetLKPInfo outLKPInfo = TargetLKPInfo();
-    targetfound = false;
+
+    if (agentCount == 0)
+    {
+		return FVector::ZeroVector;
+	}
+
+    float bestTimeStamp = 0;
+    FVector bestLkp = FVector::ZeroVector;
 
     for (int i = 0; i < agentCount; ++i)
     {
         ASDTAIController* aiAgent = m_registeredAgents[i];
         if (aiAgent)
         {
-            const TargetLKPInfo& targetLKPInfo = aiAgent->GetCurrentTargetLKPInfo();
-            if (targetLKPInfo.GetTargetLabel() == targetLabel)
+            float timelkp = aiAgent->m_lkpTimestamp;
+            if (timelkp > bestTimeStamp)
             {
-                if (targetLKPInfo.GetLastUpdatedTimeStamp() > outLKPInfo.GetLastUpdatedTimeStamp())
-                {
-                    targetfound = targetLKPInfo.GetLKPState() != TargetLKPInfo::ELKPState::LKPState_Invalid;
-                    outLKPInfo = targetLKPInfo;
-                }
-            }
+				bestTimeStamp = timelkp;
+                bestLkp = aiAgent->m_lkp;
+			}
         }
     }
 
-    return outLKPInfo;
-}
-
-// takes an agent to compare to as an input, Return an array with the distance to each agent in the group
-TArray<float> AiAgentGroupManager::GetDistancesToAgents(ASDTAIController* aiAgent)
-{
-	TArray<float> distances;
-	int agentCount = m_registeredAgents.Num();
-
-    for (int i = 0; i < agentCount; ++i)
-    {
-		ASDTAIController* otherAgent = m_registeredAgents[i];
-        if (otherAgent && otherAgent != aiAgent)
-        {
-			distances.Add(FVector::Dist(aiAgent->GetPawn()->GetActorLocation(), otherAgent->GetPawn()->GetActorLocation()));
-		}
-	}
-
-	return distances;
+    m_lastLKPUpdateTime = bestTimeStamp;
+    return bestLkp;
 }
