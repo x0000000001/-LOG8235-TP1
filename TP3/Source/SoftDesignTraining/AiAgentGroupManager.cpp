@@ -45,8 +45,6 @@ FVector AiAgentGroupManager::GetLKPFromGroup()
 {
     int agentCount = m_registeredAgents.Num();
 
-    UE_LOG(LogSoftDesignTraining, Log, TEXT("Agent count: %d"), agentCount);
-
     if (agentCount == 0)
     {
 		return FVector::ZeroVector;

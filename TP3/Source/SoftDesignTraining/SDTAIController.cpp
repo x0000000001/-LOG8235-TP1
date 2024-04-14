@@ -24,7 +24,7 @@ void ASDTAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-    AiAgentGroupManager::GetInstance()->Destroy();
+    AiAgentGroupManager::GetInstance()->Destroy();ch
 
     if (m_behaviorTree) RunBehaviorTree(m_behaviorTree);
 
