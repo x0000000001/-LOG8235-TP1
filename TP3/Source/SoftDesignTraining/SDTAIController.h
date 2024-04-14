@@ -8,6 +8,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "CoreMinimal.h"
 #include "SDTBaseAIController.h"
+#include "GameFramework/Character.h"
 #include "SDTAIController.generated.h"
 
 /**
@@ -72,9 +73,8 @@ protected:
 public:
     enum AiLOD
 	{
+        AiLOD_Medium,
 		AiLOD_Low,
-		AiLOD_Medium,
-		AiLOD_High,
         AiLOD_Invisible
 	};
 
@@ -95,11 +95,17 @@ public:
 
 private:
     virtual void ShowNavigationPath() override;
+    void ShowLOD();
 
     //LKP 
     TargetLKPInfo m_currentTargetLkpInfo;
     //bool          m_isInvestigatingLKP;
     bool bIsAllowedToRun = false;
+
+    float TimeSinceLastUpdate = 0.0f;
+
+    UCharacterMovementComponent* moveComp;
+    USkeletalMeshComponent* meshComp;
 
 
 protected:

@@ -16,12 +16,5 @@ EBTNodeResult::Type UBTTask_HasReachedTarget::ExecuteTask(UBehaviorTreeComponent
 			return EBTNodeResult::Succeeded;
 		}
 	}
-	ASDTAIController* aiController = Cast<ASDTAIController>(OwnerComp.GetAIOwner());
-	if (aiController == nullptr)
-	{
-		return EBTNodeResult::Failed;
-	}
-
-	aiController->SetAllowedToRun(false);
 	return EBTNodeResult::Failed;
 }

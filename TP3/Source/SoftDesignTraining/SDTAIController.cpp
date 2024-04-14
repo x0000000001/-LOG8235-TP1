@@ -41,21 +41,58 @@ void ASDTAIController::BeginPlay()
     if (m_blackboard) m_blackboard->SetValueAsEnum("EnumState", (uint8)PlayerInteractionBehavior_Collect);
     if (m_blackboard) m_blackboard->SetValueAsBool("ReachedTarget", true);
 
+    TArray<UActorComponent*> Components;
+    GetPawn()->GetComponents(Components);
+
+
+    //Skeletal / Anim optimization
+    ACharacter* character = Cast<ACharacter>(GetPawn());
+    if (character)
+    {
+        meshComp = character->GetMesh();
+        if (meshComp)
+        {
+            // taken from https://www.youtube.com/watch?v=xRuJgbVTvco
+            // We created LOD for the skeletal mesh, and depending on URO LOD,
+            // we can skip frames for the animation update to save performance
+            meshComp->AnimUpdateRateParams->bShouldUseLodMap = true;
+            meshComp->AnimUpdateRateParams->BaseNonRenderedUpdateRate = 2;
+            meshComp->AnimUpdateRateParams->bInterpolateSkippedFrames = true;
+            meshComp->AnimUpdateRateParams->MaxEvalRateForInterpolation = 15;
+        }
+        
+        moveComp = character->GetCharacterMovement();
+
+        if (moveComp)
+        {
+            moveComp->SetMovementMode(MOVE_Walking);
+
+        }
+    }
+
 
 }
 
 void ASDTAIController::Tick(float DeltaTime)
 {
-
-	Super::Tick(DeltaTime);
-    ShowNavigationPath();
-    ShowIsInGroup();
+    TRACE_CPUPROFILER_EVENT_SCOPE(ASDTAIController::Tick);
+    if (bIsAllowedToRun) {
+		Super::Tick(TimeSinceLastUpdate + DeltaTime);
+		//ShowNavigationPath();
+        //ShowLOD();
+		//ShowIsInGroup();
+        TimeSinceLastUpdate = 0.0f;
+    }
+    else {
+		TimeSinceLastUpdate += DeltaTime;
+	}
     UpdateLOD(DeltaTime);
+
 }
 
 void ASDTAIController::UpdateLOD(float DeltaTime)
 {
-    m_currentLOD = AiLOD_High;
+    m_currentLOD = AiLOD_Medium;
 
     AiPerformanceManager* perfManager = AiPerformanceManager::GetInstance();
     if (perfManager)
@@ -84,7 +121,7 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
                     cameraDistVec.Normalize();
                     float dotProduct = cameraVec | cameraDistVec;
 
-                    if (dotProduct < 0.0f)
+                    if (dotProduct < 0.0f) // l'agent est derrière la caméra
                     {
                         m_currentLOD = AiLOD_Invisible;
                     }
@@ -94,7 +131,7 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
                         float dotAngle = acos(FMath::Clamp(dotProduct, -1.0f, 1.0f));
                         float camAngle = ((viewInfo.FOV / 2.0f) + camBuffer) * (3.14159265 / 180.0f); // DEG2RAD
 
-                        if (dotAngle > camAngle)
+                        if (dotAngle > camAngle) // l'agent est hors du champ de vision
                         {
                             m_currentLOD = AiLOD_Invisible;
                         }
@@ -102,13 +139,8 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
                         {
                             static float invLODdist = 3000.0f;
                             static float lowLODdist = 2000.0f;
-                            static float medLODdist = 1000.0f;
 
-                            if (cameraDistSq < (medLODdist * medLODdist))
-                            {
-                                m_currentLOD = AiLOD_High;
-                            }
-                            else if (cameraDistSq < (lowLODdist * lowLODdist))
+                            if (cameraDistSq < (lowLODdist * lowLODdist))
                             {
                                 m_currentLOD = AiLOD_Medium;
                             }
@@ -225,5 +257,23 @@ bool ASDTAIController::IsAllowedToRun() {
 
 void ASDTAIController::SetAllowedToRun(bool allowed) {
 	bIsAllowedToRun = allowed;
+    meshComp->SetComponentTickEnabled(allowed);
+    meshComp->SetForcedLOD(m_currentLOD);
+    moveComp->SetComponentTickEnabled(allowed);
+    
+    
 }
 
+void ASDTAIController::ShowLOD() {
+    switch (m_currentLOD) {
+        case AiLOD_Low:
+            DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector::UpVector * 200.0f, 20.f, 32, FColor::Red);
+			break;
+		case AiLOD_Medium:
+            DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector::UpVector * 200.0f, 20.f, 32, FColor::Green);
+			break;
+		case AiLOD_Invisible:
+			DrawDebugSphere(GetWorld(), GetPawn()->GetActorLocation() + FVector::UpVector * 200.0f, 20.f, 32, FColor::Black);
+			break;
+    }
+}

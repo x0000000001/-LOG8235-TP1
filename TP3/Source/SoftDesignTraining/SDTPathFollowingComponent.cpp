@@ -48,7 +48,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
                 MovementComp->RequestDirectMove((nextLocation - controller->GetPawn()->GetActorLocation()) * controller->JumpSpeed, bNotFollowingLastSegment);
 
-                DrawDebugSphere(GetWorld(), nextLocation, 10.f, 8, FColor::Red, false, 5.f);
+                //DrawDebugSphere(GetWorld(), nextLocation, 10.f, 8, FColor::Red, false, 5.f);
             }
             else
             {
