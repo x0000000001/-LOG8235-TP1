@@ -113,10 +113,6 @@ private:
     UCharacterMovementComponent* moveComp;
     USkeletalMeshComponent* meshComp;
 
-    //LKP 
-    TargetLKPInfo m_currentTargetLkpInfo;
-    //bool          m_isInvestigatingLKP;
-
 protected:
     PlayerInteractionBehavior m_PlayerInteractionBehavior;
     AiLOD m_currentLOD;

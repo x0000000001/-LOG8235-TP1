@@ -35,7 +35,7 @@ void ASDTAIController::BeginPlay()
     }
     
 
-    AiAgentGroupManager::GetInstance()->Destroy();ch
+    AiAgentGroupManager::GetInstance()->Destroy();
 
     if (m_behaviorTree) RunBehaviorTree(m_behaviorTree);
 
@@ -161,13 +161,6 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
             }
         }
     }
-}
-
-void ASDTAIController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-    ShowNavigationPath();
-    ShowIsInGroup();
 }
 
 void ASDTAIController::SetNoLosTimer()
