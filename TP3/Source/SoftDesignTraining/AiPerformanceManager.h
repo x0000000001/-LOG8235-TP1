@@ -18,7 +18,6 @@ private:
     AiPerformanceManager();
     ~AiPerformanceManager();
 
-    TArray<ASDTAIController*> m_Agents;
     TPriorityQueue<ASDTAIController*> AgentPriorityQueue;
     static AiPerformanceManager* m_Instance;
     static FDelegateHandle m_TickDelegateHandle;

@@ -48,22 +48,11 @@ void ASDTAIController::BeginPlay()
     GetPawn()->GetComponents(Components);
 
 
-    //Skeletal / Anim optimization
+    //For Skeletal / Anim / Movement optimization
     ACharacter* character = Cast<ACharacter>(GetPawn());
     if (character)
     {
         meshComp = character->GetMesh();
-        if (meshComp)
-        {
-            // taken from https://www.youtube.com/watch?v=xRuJgbVTvco
-            // We created LOD for the skeletal mesh, and depending on URO LOD,
-            // we can skip frames for the animation update to save performance
-            meshComp->AnimUpdateRateParams->bShouldUseLodMap = true;
-            meshComp->AnimUpdateRateParams->BaseNonRenderedUpdateRate = 2;
-            meshComp->AnimUpdateRateParams->bInterpolateSkippedFrames = true;
-            meshComp->AnimUpdateRateParams->MaxEvalRateForInterpolation = 15;
-        }
-        
         moveComp = character->GetCharacterMovement();
 
     }
@@ -74,7 +63,7 @@ void ASDTAIController::BeginPlay()
 void ASDTAIController::Tick(float DeltaTime)
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(ASDTAIController::Tick);
-    if (bIsAllowedToRun) {
+    if (bIsAllowedToRun) { //Only tick if allowed to run by the AiPerformanceManager
 		Super::Tick(TimeSinceLastUpdate + DeltaTime);
 		//ShowNavigationPath();
         //ShowLOD();
@@ -88,6 +77,7 @@ void ASDTAIController::Tick(float DeltaTime)
 
 }
 
+//Taken from the method proposed in the optimization course
 void ASDTAIController::UpdateLOD(float DeltaTime)
 {
     m_currentLOD = AiLOD_Medium;
@@ -119,7 +109,7 @@ void ASDTAIController::UpdateLOD(float DeltaTime)
                     cameraDistVec.Normalize();
                     float dotProduct = cameraVec | cameraDistVec;
 
-                    if (dotProduct < 0.0f) // l'agent est derri�re la cam�ra
+                    if (dotProduct < 0.0f) // l'agent est derriere la cam�ra
                     {
                         m_currentLOD = AiLOD_Invisible;
                     }
@@ -253,10 +243,11 @@ bool ASDTAIController::IsAllowedToRun() {
 	return bIsAllowedToRun;
 }
 
+//This method is called to manage the ticking of the AIController and its components
 void ASDTAIController::SetAllowedToRun(bool allowed) {
 	bIsAllowedToRun = allowed;
     meshComp->SetComponentTickEnabled(allowed);
-    meshComp->SetForcedLOD(m_currentLOD);
+    meshComp->SetForcedLOD(m_currentLOD); // we use the LODs we created to ease the load of the SkeletalMesh
     moveComp->SetComponentTickEnabled(allowed);
     
     

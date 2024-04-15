@@ -7,7 +7,8 @@
 #include "SDTAIController.h"
 #include "SoftDesignTrainingCharacter.h"
 
-
+// Modified it into a AnimNotifyState instead of AnimNotify to fire it at the transition of the state machine in the Anim BP
+// instead of firing it as a one-off event in the animation timeline. (Otherwise may not be fired if tick rate is too low and we're stuck after the jump)
 
 
 void USDTAnimNotifyState_JumpEnd::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration){

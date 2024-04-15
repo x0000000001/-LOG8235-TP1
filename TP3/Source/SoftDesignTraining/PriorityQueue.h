@@ -1,6 +1,9 @@
 #ifndef PRIORITYQUEUE_H
 #define PRIORITYQUEUE_H
 
+// Mostly taken from : https://gist.github.com/SomethingWithComputers/48e32b281d1bf8e662412e4113df43dc
+// Added UpdatePriority() function to update the priority of all elements in the queue
+
 template <typename InElementType>
 struct TPriorityQueueNode {
     InElementType Element;

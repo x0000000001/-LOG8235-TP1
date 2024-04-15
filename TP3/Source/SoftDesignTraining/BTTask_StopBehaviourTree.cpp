@@ -16,7 +16,8 @@ EBTNodeResult::Type UBTTask_StopBehaviourTree::ExecuteTask(UBehaviorTreeComponen
 	{
 		return EBTNodeResult::Failed;
 	}
-
+	// Coupled with the AiPerfManager, after running the behaviour tree for 1 tick*, we stop it along with other components ticks
+	// *Not really the case if we're currently chasing the player
 	aiController->SetAllowedToRun(false);
 
 	return EBTNodeResult::Succeeded;

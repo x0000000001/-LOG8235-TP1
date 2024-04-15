@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+//The goal of this singleton class is to manage the execution of AI agents in the world,
+//in order to optimize performance. The class uses a priority queue to determine which agents
+//should be executed during a tick, based on their LOD settings
+
 
 #include "AiPerformanceManager.h"
 #include "CoreMinimal.h"
@@ -10,7 +14,7 @@
 #include "ObjectPartition.h"
 #include "SDTUtils.h"
 
-#define NB_AGENTS_PER_TICK 20
+#define NB_AGENTS_PER_TICK 15
 
 // How much High LOD agents are prioritized over Low LOD agents
 #define PRIORITYFACTOR 3
@@ -46,19 +50,7 @@ void AiPerformanceManager::Destroy()
 
 void AiPerformanceManager::RegisterAgent(ASDTAIController* npcCharacter)
 {
-    m_Agents.Add(npcCharacter);
     AgentPriorityQueue.Push(npcCharacter, PRIORITYFACTOR * PRIORITYFACTOR * npcCharacter->GetCurrentLOD() + 1);
-    // TODO more optimization : intermediate LOD where AI far from player = less updates
-    //ObjectPartition* op = ObjectPartition::GetInstance();
-    //op->RegisterObject(npcCharacter);
-}
-
-void AiPerformanceManager::UnregisterAgent(ASDTAIController* npcCharacter)
-{
-    m_Agents.Remove(npcCharacter);
-
-    //ObjectPartition* op = ObjectPartition::GetInstance();
-    //op->UnregisterObject(npcCharacter);
 }
 
 AActor* AiPerformanceManager::GetPlayer()
@@ -81,9 +73,6 @@ void AiPerformanceManager::UnregisterPlayer(AActor* player)
     m_PlayerInstance.Remove(player);
 }
 
-//TODO increase priority if wasn't updated in the current frame
-
-
 void AiPerformanceManager::TickWorld(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
     TArray<ASDTAIController*> AgentsExecuted;
@@ -93,29 +82,21 @@ void AiPerformanceManager::TickWorld(UWorld* World, ELevelTick TickType, float D
     {
         // Pop the highest priority agent from the queue
         ASDTAIController* Agent = AgentPriorityQueue.Pop();
+        if (Agent)
+        {
+			// Update the agent
+			Agent->SetAllowedToRun(true); // Allow the agent to run : BT, movement, etc.
+			AgentsExecuted.Add(Agent);
+		}
 
-        // Update the agent
-        Agent->SetAllowedToRun(true); // Allow the agent to run
-        AgentsExecuted.Add(Agent);
     }
-    AgentPriorityQueue.UpdatePriority();
+    // Update the priority of all agents that were NOT executed
+    AgentPriorityQueue.UpdatePriority(); 
     for (ASDTAIController* Agent : AgentsExecuted)
     {
         // Put the agent back into the queue with updated priority based on LOD settings
-        AgentPriorityQueue.Push(Agent, PRIORITYFACTOR * PRIORITYFACTOR * Agent->GetCurrentLOD()  + 1);
-	}
-    /*
-    // Process agents until time budget is exhausted or queue is empty
-    for (ASDTAIController* Agent : m_Agents)
-    {
-        // Update the agent
-        if (Agent->GetCurrentLOD() != ASDTAIController::AiLOD_Invisible) {
-            Agent->SetAllowedToRun(true); // Allow the agent to run
-            // Update the total time spent
-            TimeSpent += 0.2f;
-        }
+        AgentPriorityQueue.Push(Agent, PRIORITYFACTOR * PRIORITYFACTOR * Agent->GetCurrentLOD() + 1);
     }
-    */
 
 
 }
